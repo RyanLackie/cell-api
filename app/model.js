@@ -1,13 +1,10 @@
+const { v4: uuidv4 } = require('uuid');
 const GameState = require('./States/GameState.js');
 
-const gameStates = [];
+const gameStates = {};
 
 class Model {
-    constructor() {
-        for (var i = 0; i < 100; i++) {
-            gameStates[i] = null;
-        }
-    }
+    constructor() {}
 
     // Methods
     ping(call_back) {
@@ -36,16 +33,7 @@ class Model {
     }
 
     createNewGame(call_back) {
-        let ID = null;
-        for (var i = 0; i < gameStates.length; i++) {
-            if (gameStates[i] === null) {
-                ID = i;
-                break;
-            }
-        }
-        if (ID === null) {
-            return call_back({ 'status': 403, 'message': 'Server is Full' });
-        }
+        const ID = uuidv4();
 
         const gameState = new GameState(null, null, [], [], []);
         gameState.createNewGame();
@@ -75,8 +63,8 @@ class Model {
     }
 
     removeGameState(ID) {
-        gameStates[ID] = null;
-        let numberActive = gameStates.filter(state => state !== null).length;
+        delete gameStates[ID];
+        let numberActive = Object.entries(gameStates).filter(state => state !== null).length;
         console.log('gameState: '+ID+' cleared, gameStates active: '+numberActive);
     }
 
