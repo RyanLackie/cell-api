@@ -29,14 +29,14 @@ class GameState {
             new Wall(this.bounds.width - this.bounds.wallThickness, 0, this.bounds.wallThickness, this.bounds.height),      // Right
         ];
 
-        var numOfAllies = 4;
-        for (var i = 0; i < numOfAllies; i++) {
+        let numOfAllies = 4;
+        for (let i = 0; i < numOfAllies; i++) {
             const r = 20;
-            var x = Util.randomIntFromRange(this.bounds.wallThickness + r, this.bounds.width - this.bounds.wallThickness - r);
-            var y = Util.randomIntFromRange(this.bounds.wallThickness + r, this.bounds.height - this.bounds.wallThickness - r);
+            let x = Util.randomIntFromRange(this.bounds.wallThickness + r, this.bounds.width - this.bounds.wallThickness - r);
+            let y = Util.randomIntFromRange(this.bounds.wallThickness + r, this.bounds.height - this.bounds.wallThickness - r);
 
-            if (i != 0) {
-                for (var j = 0; j < this.allies.length; j++) {
+            if (i !== 0) {
+                for (let j = 0; j < this.allies.length; j++) {
                     if (Util.distance(x, y, this.allies[j].x, this.allies[j].y) - (r + this.allies[j].radius) < 0) {
                         x = Util.randomIntFromRange(this.bounds.wallThickness + r, this.bounds.width - this.bounds.wallThickness - r);
                         y = Util.randomIntFromRange(this.bounds.wallThickness + r, this.bounds.height - this.bounds.wallThickness - r);
@@ -49,14 +49,14 @@ class GameState {
             this.allies.push( new Circle(x, y, r) );
         }
 
-        var numOfEnemies = 4;
-        for (var i = 0; i < numOfEnemies; i++) {
+        let numOfEnemies = 4;
+        for (let i = 0; i < numOfEnemies; i++) {
             const r = 20;
-            var x = Util.randomIntFromRange(this.bounds.wallThickness + r, this.bounds.width - this.bounds.wallThickness - r);
-            var y = Util.randomIntFromRange(this.bounds.wallThickness + r, this.bounds.height - this.bounds.wallThickness - r);
+            let x = Util.randomIntFromRange(this.bounds.wallThickness + r, this.bounds.width - this.bounds.wallThickness - r);
+            let y = Util.randomIntFromRange(this.bounds.wallThickness + r, this.bounds.height - this.bounds.wallThickness - r);
 
-            if (i != 0) {
-                for (var j = 0; j < this.allies.length; j++) {
+            if (i !== 0) {
+                for (let j = 0; j < this.allies.length; j++) {
                     if (Util.distance(x, y, this.allies[j].x, this.allies[j].y) - (r + this.allies[j].radius) < 0) {
                         x = Util.randomIntFromRange(this.bounds.wallThickness + r, this.bounds.width - this.bounds.wallThickness - r);
                         y = Util.randomIntFromRange(this.bounds.wallThickness + r, this.bounds.height - this.bounds.wallThickness - r);
@@ -71,51 +71,40 @@ class GameState {
     }
 
     tick() {
-        var now = Date.now();
-        var dt = now - this.lastUpdate;
+        let now = Date.now();
+        let dt = now - this.lastUpdate;
         this.lastUpdate = now;
 
-        for (var i = 0; i < this.allies.length; i++) {
-            this.allies[i].update(dt, this.food, this.allies, this.enemies, this.walls, this.bounds);
-        }
-        for (var i = 0; i < this.enemies.length; i++) {
-            this.enemies[i].update(dt, this.food, this.enemies, this.allies, this.walls, this.bounds);
-        }
+        this.allies.forEach(ally => {
+            ally.update(dt, this.food, this.allies, this.enemies, this.walls, this.bounds);
+        });
+        this.enemies.forEach(enemy => {
+            enemy.update(dt, this.food, this.enemies, this.allies, this.walls, this.bounds);
+        });
 
-        this.spawnFood();
+        if (Date.now() > this.lastFoodSpawn + 5000) {
+            this.spawnFood();
+        }
     }
 
     spawnFood() {
-        if (Date.now() > this.lastFoodSpawn + 5000) {
-            this.lastFoodSpawn = Date.now();
+        const foodRadius = 5;
+        let x = Util.randomIntFromRange(this.bounds.wallThickness + foodRadius, this.bounds.width - this.bounds.wallThickness - foodRadius);
+        let y = Util.randomIntFromRange(this.bounds.wallThickness + foodRadius, this.bounds.height - this.bounds.wallThickness - foodRadius);
 
-            const r = 5;
-            var x = Util.randomIntFromRange(this.bounds.wallThickness + r, this.bounds.width - this.bounds.wallThickness - r);
-            var y = Util.randomIntFromRange(this.bounds.wallThickness + r, this.bounds.height - this.bounds.wallThickness - r);
+        const allyConflict = this.allies.find(ally => {
+            return Util.distance(x, y, ally.x, ally.y) - (foodRadius + ally.radius) < 0;
+        });
+        const enemyConflict = this.enemies.find(enemy => {
+            return Util.distance(x, y, enemy.x, enemy.y) - (foodRadius + enemy.radius) < 0;
+        });
 
-            for (var i = 0; i < Math.max(this.allies.length, this.enemies.length); i++) {
-                if (i < this.allies.length) {
-                    if (Util.distance(x, y, this.allies[i].x, this.allies[i].y) - (r + this.allies[i].radius) < 0) {
-                        x = Util.randomIntFromRange(this.bounds.wallThickness + r, this.bounds.width - this.bounds.wallThickness - r);
-                        y = Util.randomIntFromRange(this.bounds.wallThickness + r, this.bounds.height - this.bounds.wallThickness - r);
-
-                        i = -1;
-                        continue;
-                    }
-                }
-                if (i < this.enemies.length) {
-                    if (i < this.enemies.length && Util.distance(x, y, this.enemies[i].x, this.enemies[i].y) - (r + this.enemies[i].radius) < 0) {
-                        x = Util.randomIntFromRange(this.bounds.wallThickness + r, this.bounds.width - this.bounds.wallThickness - r);
-                        y = Util.randomIntFromRange(this.bounds.wallThickness + r, this.bounds.height - this.bounds.wallThickness - r);
-
-                        i = -1;
-                        continue;
-                    }
-                }
-            }
-
-            this.food.push( new Food(x, y, r) );
+        if (allyConflict || enemyConflict) {
+            this.spawnFood();
         }
+
+        this.lastFoodSpawn = Date.now();
+        this.food.push( new Food(x, y, foodRadius) );
     }
 
 }
